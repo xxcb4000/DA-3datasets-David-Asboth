@@ -1,6 +1,8 @@
 /*
 
-
+Pour rappel, les infos proviennent de 3 fichiers plats csv. Nous travaillons en t-sql. 
+La première étape va être de bulk insert les fichiers sur mon serveur. 
+On le fait un peu à la hache avec des NVARCHAR(max), on peut bien entendu changer les types a posteriori pour optimiser éventuellement. 
 On va devoir rassembler les infos concernant les clients dans une seule table. 
 
 */
@@ -183,7 +185,7 @@ WHERE client_id LIKE 2505
 -- ok
 
 -- maintenant avec la table clients et la table export_crm
--- on vérifie que les entéres sont uniques dans les tables
+-- on vérifie que les entrées sont uniques dans les tables
 SELECT COUNT(*)
 FROM dbo.clients
 GROUP BY client_id
@@ -303,7 +305,7 @@ FROM dbo.table_de_travail
 -- à force de regarder le dataset, je propose de considérer que si les client_prenom, nom, cp et age 
 -- de 2 entrées sont les mêmes, c'est un doublon. Même si l'id est différent. La probabilité 
 -- qu'il s'agisse de personnes différentes avec ces 4 entrées identiques est très faible. 
--- on pourrait approfondir cette hypothèse avec des données population. Mais on laisse ça pour plus tard.
+-- on pourrait approfondir cette hypothèse avec des données population/stat de nom et prénom. Mais on laisse ça pour plus tard.
 -- donc, hypothèse 1 et 2, on va les attaquer de front. 
 
 SELECT client_prenom, client_nom, client_cp, client_age, COUNT(*)
@@ -312,7 +314,7 @@ GROUP BY client_prenom, client_nom, client_cp, client_age
 HAVING COUNT(*) = 2
 ORDER BY COUNT(*) DESC
 -- et donc si on change le HAVING COUNT(*) par 2, puis 3, puis 4, puis 5
--- on va pouvoir mesurer le nbre de doublon sur une identité prénom, nom, cp et age. 
+-- on va pouvoir mesurer le nbre de doublons sur une identité prénom, nom, cp et age. 
 -- 5 => 0 pas de quintuplé !
 -- 4 => 181 quadruplés ! 
 -- 3 => 1.420 triplés 
@@ -362,7 +364,7 @@ INSERT INTO dbo.table_de_travail_temp
     FROM dbo.table_de_travail
 
 GO
--- on a nos 2 colonnes qui vont nous permettre de travailler. Et on a CONVERT car on va additionner comme ça
+-- on a nos 2 colonnes qui vont nous permettre de travailler. 
 -- on garde toute l'info d'origine des doublons. 
 -- faisons quelques vérifications
 -- SELECT COUNT(*)
@@ -370,7 +372,7 @@ GO
 --WHERE rang_client_id = 2
 
 
--- on va rentrer dans un boucle qui va examiner du rang 2 au rang 4 et rappatrier les infos par une 
+-- on va rentrer dans un boucle qui va examiner du rang 2 au rang 4 et rappatrier les infos sur l'entrée de rang 1 par une 
 -- self-join de ma table avec elle-même filtrée sur les doublons. 
 -- on garde toute la puissance de sql avec cette approche ! 
 
@@ -409,7 +411,7 @@ END
 -- 3 => 1601 lignes 
 -- 4 => 181 lignes
 -- ce qui nous rend heureux ! car ça correspond exactement aux nombres de jumeaux 
--- triplés et quadruplés qu'on avait identifié (il faut ajouter les quadruplés aux triplés
+-- triplés et quadruplés qu'on avait identifié (il faut ajouter les quadruplés aux triplés, etc.
 -- pour réconcilier les résultats).
 -- maintenant qu'on est heureux, on va pouvoir DELETE. 
 -- en fait on va créer une table tempbis
@@ -457,9 +459,7 @@ FROM dbo.table_de_travail_temp_bis
 ORDER BY client_prenom, client_nom, client_cp, client_age
 -- j'ai 24.961 lignes avec des id sans prenom, nom, etc... de la table achat. 
 
-UPDATE dbo.table_de_travail_temp_bis
-SET nbre_doublon = NULL
-WHERE rang_client_id >=5
+--
 
 SELECT *
 FROM dbo.table_de_travail
