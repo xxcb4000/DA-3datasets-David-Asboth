@@ -455,12 +455,86 @@ FROM dbo.table_de_travail_temp_bis
 
 SELECT *
 FROM dbo.table_de_travail_temp_bis
---WHERE nbre_doublon < 5
+WHERE nbre_doublon IS NULL
 ORDER BY client_prenom, client_nom, client_cp, client_age
 -- j'ai 24.961 lignes avec des id sans prenom, nom, etc... de la table achat. 
 
 --
+/*
+PAUSE... ici j'ai encore un peu chipoté.
+Pourquoi? Parce que j'ai fait un update qui me semblait renir la route sur les doublons de 
+ma dbo.achats qui n'avaient pas de client_id mais avaient un prenom, nom et cp qu'on
+retrouvait dans la partie de ma table déjà triée. 
+MAIS !!!! 
+MAIS.... j'ai essayé de vérifier que mon update affectait le même nombre de row 
+que une query avec un intersect / except... 
+Mon update affectait 2.192 lignes.... mais mon intersect en comptait 2.174....
+et un except pour sortir les doublons des 8.300 sans id => 6.126... + 2.174 = 8.300 c'était ok!
+Donc il y avait un souci avec mon update...
+MAIS !!!
+Mais si je faisais un except dans l'autre sens (il n'est pas commutatif)... j'arrivais à 19.094.
++ 2.174 != 21.425 !! donc... j'étais dans la panade. 
+Puis... je me suis rappelé qu'un intersect ne prenait pas en compte les doublons....
+Etait-il posisble que... certaines entrées sur la base du prenom, nom et cp soient présentes plus
+que 2 fois..... et bien oui !!! 21 d'entre elles sont identiques sur prenom, nom et cp mais diffèrent
+par l'âge ! je ne les ai donc pas considérées comme doublon dans le tri précécent !
+Mais... à laquelle des 2 entrées de ma table précédente vais-je affecter les info de l'entrée que j'ai
+dans ma table achat...? je n'ai pas l'age... du coup... j'ai décidé de sortir les 21 entrées de la table
+achats car je ne pouvais les affecter à aucune des 2 entrées sauf de façon arbitraire. 
+*/
+
+/*
+UPDATE ttb1
+SET ttb1.client_nbre_achats = ttb2.client_nbre_achats,
+    ttb1.client_depense = ttb2.client_depense,
+    ttb1.client_est_dans_achats = ttb2.client_est_dans_achats,
+    ttb1.nbre_doublon = ttb1.nbre_doublon + ttb2.client_est_dans_achats
+FROM dbo.table_de_travail_temp_bis ttb1 
+JOIN dbo.table_de_travail_temp_bis ttb2
+    ON ttb1.client_prenom = ttb2.client_prenom 
+    AND ttb1.client_nom = ttb2.client_nom 
+    AND ttb1.client_cp = ttb2.client_cp
+WHERE ttb1.client_id IS NOT NULL AND ttb1.client_prenom IS NOT NULL AND ttb2.client_id IS NULL
+
+SELECT COUNT(*)
+FROM (
+SELECT client_prenom, client_nom, client_cp
+FROM dbo.table_de_travail_temp_bis
+WHERE client_id IS NULL
+INTERSECT
+SELECT client_prenom, client_nom, client_cp
+FROM dbo.table_de_travail_temp_bis
+WHERE client_id IS NOT NULL AND client_prenom IS NOT NULL
+) AS table_intersect
+
+SELECT COUNT(*)
+FROM (
+SELECT client_prenom, client_nom, client_cp
+FROM dbo.table_de_travail_temp_bis
+WHERE client_id IS NOT NULL AND client_prenom IS NOT NULL
+EXCEPT
+SELECT client_prenom, client_nom, client_cp
+FROM dbo.table_de_travail_temp_bis
+WHERE client_id IS NULL
+) tout_sauf_intersec
+
+SELECT COUNT(*)
+FROM (
+SELECT client_prenom, client_nom, client_cp
+FROM dbo.table_de_travail_temp_bis
+WHERE client_id IS NULL
+EXCEPT
+SELECT client_prenom, client_nom, client_cp
+FROM dbo.table_de_travail_temp_bis
+WHERE client_id IS NOT NULL AND client_prenom IS NOT NULL
+) tout_sauf_intersec
+
+SELECT COUNT(*) 
+FROM dbo.table_de_travail_temp_bis
+WHERE client_id IS NULL
 
 SELECT *
-FROM dbo.table_de_travail
-WHERE client_id LIKE 2505
+FROM dbo.table_de_travail_temp_bis
+WHERE client_prenom LIKE 'SOPHIE' AND client_nom LIKE 'WILKINSON' AND client_cp LIKE 'DE13HN'
+
+*/
