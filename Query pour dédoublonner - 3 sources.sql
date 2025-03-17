@@ -484,57 +484,59 @@ achats car je ne pouvais les affecter à aucune des 2 entrées sauf de façon ar
 */
 
 /*
-UPDATE ttb1
-SET ttb1.client_nbre_achats = ttb2.client_nbre_achats,
-    ttb1.client_depense = ttb2.client_depense,
-    ttb1.client_est_dans_achats = ttb2.client_est_dans_achats,
-    ttb1.nbre_doublon = ttb1.nbre_doublon + ttb2.client_est_dans_achats
-FROM dbo.table_de_travail_temp_bis ttb1 
-JOIN dbo.table_de_travail_temp_bis ttb2
-    ON ttb1.client_prenom = ttb2.client_prenom 
-    AND ttb1.client_nom = ttb2.client_nom 
-    AND ttb1.client_cp = ttb2.client_cp
-WHERE ttb1.client_id IS NOT NULL AND ttb1.client_prenom IS NOT NULL AND ttb2.client_id IS NULL
+        UPDATE ttb1
+        SET ttb1.client_nbre_achats = ttb2.client_nbre_achats,
+            ttb1.client_depense = ttb2.client_depense,
+            ttb1.client_est_dans_achats = ttb2.client_est_dans_achats,
+            ttb1.nbre_doublon = ttb1.nbre_doublon + ttb2.client_est_dans_achats
+        FROM dbo.table_de_travail_temp_bis ttb1 
+        JOIN dbo.table_de_travail_temp_bis ttb2
+            ON ttb1.client_prenom = ttb2.client_prenom 
+            AND ttb1.client_nom = ttb2.client_nom 
+            AND ttb1.client_cp = ttb2.client_cp
+        WHERE ttb1.client_id IS NOT NULL AND ttb1.client_prenom IS NOT NULL AND ttb2.client_id IS NULL
 
-SELECT COUNT(*)
-FROM (
-SELECT client_prenom, client_nom, client_cp
-FROM dbo.table_de_travail_temp_bis
-WHERE client_id IS NULL
-INTERSECT
-SELECT client_prenom, client_nom, client_cp
-FROM dbo.table_de_travail_temp_bis
-WHERE client_id IS NOT NULL AND client_prenom IS NOT NULL
-) AS table_intersect
+        SELECT COUNT(*)
+        FROM (
+        SELECT client_prenom, client_nom, client_cp
+        FROM dbo.table_de_travail_temp_bis
+        WHERE client_id IS NULL
+        INTERSECT
+        SELECT client_prenom, client_nom, client_cp
+        FROM dbo.table_de_travail_temp_bis
+        WHERE client_id IS NOT NULL AND client_prenom IS NOT NULL
+        ) AS table_intersect
 
-SELECT COUNT(*)
-FROM (
-SELECT client_prenom, client_nom, client_cp
-FROM dbo.table_de_travail_temp_bis
-WHERE client_id IS NOT NULL AND client_prenom IS NOT NULL
-EXCEPT
-SELECT client_prenom, client_nom, client_cp
-FROM dbo.table_de_travail_temp_bis
-WHERE client_id IS NULL
-) tout_sauf_intersec
+        SELECT COUNT(*)
+        FROM (
+        SELECT client_prenom, client_nom, client_cp
+        FROM dbo.table_de_travail_temp_bis
+        WHERE client_id IS NOT NULL AND client_prenom IS NOT NULL
+        EXCEPT
+        SELECT client_prenom, client_nom, client_cp
+        FROM dbo.table_de_travail_temp_bis
+        WHERE client_id IS NULL
+        ) tout_sauf_intersec
 
-SELECT COUNT(*)
-FROM (
-SELECT client_prenom, client_nom, client_cp
-FROM dbo.table_de_travail_temp_bis
-WHERE client_id IS NULL
-EXCEPT
-SELECT client_prenom, client_nom, client_cp
-FROM dbo.table_de_travail_temp_bis
-WHERE client_id IS NOT NULL AND client_prenom IS NOT NULL
-) tout_sauf_intersec
+        SELECT COUNT(*)
+        FROM (
+        SELECT client_prenom, client_nom, client_cp
+        FROM dbo.table_de_travail_temp_bis
+        WHERE client_id IS NULL
+        EXCEPT
+        SELECT client_prenom, client_nom, client_cp
+        FROM dbo.table_de_travail_temp_bis
+        WHERE client_id IS NOT NULL AND client_prenom IS NOT NULL
+        ) tout_sauf_intersec
 
-SELECT COUNT(*) 
-FROM dbo.table_de_travail_temp_bis
-WHERE client_id IS NULL
+        SELECT COUNT(*) 
+        FROM dbo.table_de_travail_temp_bis
+        WHERE client_id IS NULL
 
-SELECT *
-FROM dbo.table_de_travail_temp_bis
-WHERE client_prenom LIKE 'SOPHIE' AND client_nom LIKE 'WILKINSON' AND client_cp LIKE 'DE13HN'
+        SELECT *
+        FROM dbo.table_de_travail_temp_bis
+        WHERE client_prenom LIKE 'SOPHIE' AND client_nom LIKE 'WILKINSON' AND client_cp LIKE 'DE13HN'
 
 */
+
+
